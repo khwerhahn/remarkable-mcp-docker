@@ -197,19 +197,25 @@ The `make update` command rebuilds the image with `--no-cache` to pull the lates
 
 ## Troubleshooting
 
+### Token Issues
+
 **Token expired or invalid?**
 ```bash
 make register
 ```
 Then update `.env` and run `make secrets`.
 
+### Performance
+
 **First load very slow?**
-Normal on first run. Document metadata is being downloaded. Subsequent starts use the cache.
+Normal on first run. Document metadata is being downloaded from reMarkable Cloud. Subsequent starts use the cache.
 
 **Clear stale cache:**
 ```bash
 make clear-cache
 ```
+
+### Docker MCP Toolkit Issues
 
 **Check server status:**
 ```bash
@@ -217,10 +223,34 @@ make status
 docker mcp server ls
 ```
 
-**View server details:**
+> **Important:** Server showing "enabled" with "✓ done" for secrets does **not** guarantee the tools are working. This only means the configuration is set, not that the connection is active.
+
+**Verify the server actually works:**
 ```bash
-docker mcp server inspect remarkable
+make verify
 ```
+This tests the full MCP pipeline including initialization and tool listing.
+
+**Tools not showing up in your AI client?**
+
+The Docker MCP Toolkit may show the server as enabled but tools might not be exposed to your client. Try:
+
+1. Restart Docker Desktop
+2. Disable and re-enable the server:
+   ```bash
+   docker mcp server disable remarkable
+   docker mcp server enable remarkable
+   ```
+3. Check Docker MCP Toolkit logs in Docker Desktop
+
+**Known Docker MCP Toolkit limitations:**
+- `docker mcp server inspect` may return protocol errors
+- `docker mcp tools ls` may hang on some setups
+- Tool namespace mapping to AI clients can be inconsistent
+
+If you encounter persistent issues with the Docker MCP Toolkit (not the remarkable-mcp server itself), please report them to:
+- [Docker MCP Toolkit Issues](https://github.com/docker/mcp-gateway/issues)
+- [Docker Community Forums](https://forums.docker.com)
 
 ## File Structure
 
