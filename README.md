@@ -23,7 +23,7 @@ Docker packaging for [remarkable-mcp](https://github.com/SamMorrowDrums/remarkab
 
 ```bash
 # Clone the repo
-git clone https://github.com/YOUR_USERNAME/remarkable-mcp-docker.git
+git clone https://github.com/khwerhahn/remarkable-mcp-docker.git
 cd remarkable-mcp-docker
 
 # 1. Run setup (creates .env and shows instructions)
@@ -242,6 +242,27 @@ Key features:
 - `longLived: true` - Container persists for faster subsequent calls
 - `volumes: remarkable-cache:/app/cache` - Document metadata cached
 - Secrets stored in Docker Desktop's secret store
+
+## Contributing
+
+Contributions are welcome and greatly appreciated! Whether it's bug fixes, new features, documentation improvements, or just suggestions - all input helps make this project better.
+
+**Ways to contribute:**
+
+- **Report bugs** - Open an [issue](https://github.com/khwerhahn/remarkable-mcp-docker/issues) with details about the problem
+- **Suggest features** - Have an idea? Open an issue to discuss it
+- **Submit PRs** - Fork the repo, make your changes, and submit a pull request
+- **Improve docs** - Found something unclear? Documentation fixes are always welcome
+
+**Before submitting a PR:**
+
+1. Fork and clone the repository
+2. Create a branch for your changes (`git checkout -b feature/my-improvement`)
+3. Test your changes with `make verify`
+4. Commit with a clear message
+5. Push and open a PR
+
+For issues with the core MCP server functionality (not Docker-specific), please report to the [upstream project](https://github.com/SamMorrowDrums/remarkable-mcp/issues).
 
 ## Credits
 
