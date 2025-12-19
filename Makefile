@@ -11,7 +11,7 @@ IMAGE_TAG := latest
 FULL_IMAGE := $(IMAGE_NAME):$(IMAGE_TAG)
 CACHE_VOLUME := remarkable-cache
 
-.PHONY: all build update install test clean help env-check register secrets status version verify setup
+.PHONY: all build update install test clean help env-check register secrets status version verify setup tools diagnose
 
 all: build
 
@@ -146,9 +146,86 @@ run: env-check
 
 # Check server status
 status:
-	@docker mcp server ls 2>&1 | grep -E "NAME|remarkable"
+	@echo "═══════════════════════════════════════════════════════════════"
+	@echo "  Docker MCP Server Status"
+	@echo "═══════════════════════════════════════════════════════════════"
 	@echo ""
-	@docker mcp secret ls 2>&1 | grep remarkable || echo "No secrets configured"
+	@docker mcp server ls 2>&1 | grep -E "NAME|remarkable" || echo "Server not found in catalog"
+	@echo ""
+	@echo "Secrets:"
+	@docker mcp secret ls 2>&1 | grep remarkable || echo "  No secrets configured"
+	@echo ""
+	@echo "⚠️  Note: 'enabled' status does NOT mean tools are working."
+	@echo "   Run 'make verify' to test the full pipeline."
+
+# List available MCP tools
+tools: env-check
+	@echo "═══════════════════════════════════════════════════════════════"
+	@echo "  Available MCP Tools"
+	@echo "═══════════════════════════════════════════════════════════════"
+	@echo ""
+	@echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}' | \
+		timeout 30 docker run --rm -i --env-file .env -v $(CACHE_VOLUME):/app/cache $(FULL_IMAGE) 2>/dev/null | \
+		grep -o '"name":"[^"]*"' | sed 's/"name":"//g' | sed 's/"//g' | while read tool; do \
+			echo "  • $$tool"; \
+		done || echo "  ✗ Could not retrieve tools (check your token)"
+	@echo ""
+	@echo "Usage: These tools are available via Docker MCP Toolkit"
+	@echo "       after running: docker mcp server enable remarkable"
+
+# Full diagnostic check
+diagnose:
+	@echo "═══════════════════════════════════════════════════════════════"
+	@echo "  remarkable-mcp Diagnostic Report"
+	@echo "═══════════════════════════════════════════════════════════════"
+	@echo ""
+	@echo "1. Docker MCP Toolkit"
+	@echo "   ─────────────────────────────"
+	@docker mcp version 2>/dev/null && echo "   ✓ Installed" || echo "   ✗ Not installed or not in PATH"
+	@echo ""
+	@echo "2. Docker Image"
+	@echo "   ─────────────────────────────"
+	@docker image inspect $(FULL_IMAGE) > /dev/null 2>&1 && echo "   ✓ $(FULL_IMAGE) exists" || echo "   ✗ Image not found (run: make build)"
+	@echo ""
+	@echo "3. Cache Volume"
+	@echo "   ─────────────────────────────"
+	@docker volume inspect $(CACHE_VOLUME) > /dev/null 2>&1 && echo "   ✓ $(CACHE_VOLUME) exists" || echo "   ✗ Volume not found (run: make install)"
+	@echo ""
+	@echo "4. Server Registration"
+	@echo "   ─────────────────────────────"
+	@docker mcp server ls 2>&1 | grep -q remarkable && echo "   ✓ Server in catalog" || echo "   ✗ Server not in catalog"
+	@docker mcp server ls 2>&1 | grep remarkable | grep -q "enabled" 2>/dev/null && echo "   ✓ Server enabled" || echo "   ⚠ Server not enabled (run: docker mcp server enable remarkable)"
+	@echo ""
+	@echo "5. Secrets"
+	@echo "   ─────────────────────────────"
+	@docker mcp secret ls 2>&1 | grep -q "remarkable.token" && echo "   ✓ remarkable.token configured" || echo "   ✗ remarkable.token missing (run: make secrets)"
+	@docker mcp secret ls 2>&1 | grep -q "remarkable.google_vision_key" && echo "   ✓ remarkable.google_vision_key configured (optional)" || echo "   ⚠ remarkable.google_vision_key not set (optional, for OCR)"
+	@echo ""
+	@echo "6. Local .env File"
+	@echo "   ─────────────────────────────"
+	@if [ -f .env ]; then \
+		echo "   ✓ .env exists"; \
+		grep -q "REMARKABLE_TOKEN=." .env && echo "   ✓ REMARKABLE_TOKEN set" || echo "   ✗ REMARKABLE_TOKEN empty"; \
+		grep -q "GOOGLE_VISION_API_KEY=." .env && echo "   ✓ GOOGLE_VISION_API_KEY set" || echo "   ⚠ GOOGLE_VISION_API_KEY empty (optional)"; \
+	else \
+		echo "   ✗ .env not found (run: make setup)"; \
+	fi
+	@echo ""
+	@echo "7. MCP Server Response"
+	@echo "   ─────────────────────────────"
+	@if [ -f .env ]; then \
+		echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"diagnose","version":"1.0"}}}' | \
+			timeout 15 docker run --rm -i --env-file .env -v $(CACHE_VOLUME):/app/cache $(FULL_IMAGE) 2>/dev/null | \
+			grep -q '"serverInfo"' && echo "   ✓ Server responds to MCP initialize" || echo "   ✗ Server not responding (check token)"; \
+	else \
+		echo "   ⚠ Skipped (no .env file)"; \
+	fi
+	@echo ""
+	@echo "═══════════════════════════════════════════════════════════════"
+	@echo "  If all checks pass but tools don't appear in your AI client,"
+	@echo "  this is likely a Docker MCP Toolkit issue, not this server."
+	@echo "  See: https://github.com/docker/mcp-gateway/issues"
+	@echo "═══════════════════════════════════════════════════════════════"
 
 # Clear document cache
 clear-cache:
@@ -167,24 +244,33 @@ clean:
 help:
 	@echo "remarkable-mcp Docker Makefile"
 	@echo ""
-	@echo "Commands:"
+	@echo "Setup Commands:"
 	@echo "  make setup       - Create .env and show setup instructions"
+	@echo "  make register    - Register device with reMarkable Cloud"
+	@echo "  make install     - Build image and set up secrets"
+	@echo "  make secrets     - Update Docker MCP secrets from .env"
+	@echo ""
+	@echo "Build Commands:"
 	@echo "  make build       - Build the Docker image"
 	@echo "  make update      - Rebuild with latest remarkable-mcp from PyPI"
-	@echo "  make install     - Build image and set up secrets"
-	@echo "  make register    - Register device with reMarkable Cloud"
-	@echo "  make secrets     - Update Docker MCP secrets from .env"
-	@echo "  make test        - Test the image and connection"
-	@echo "  make verify      - Verify full MCP pipeline works"
-	@echo "  make run         - Run standalone for debugging"
-	@echo "  make status      - Check server and secrets status"
-	@echo "  make version     - Show version info"
-	@echo "  make clear-cache - Clear document cache"
 	@echo "  make clean       - Remove the Docker image"
 	@echo ""
-	@echo "Setup:"
+	@echo "Diagnostic Commands:"
+	@echo "  make status      - Check server and secrets status"
+	@echo "  make tools       - List available MCP tools"
+	@echo "  make diagnose    - Full diagnostic report"
+	@echo "  make verify      - Verify full MCP pipeline works"
+	@echo "  make test        - Test the image and connection"
+	@echo ""
+	@echo "Other Commands:"
+	@echo "  make run         - Run standalone for debugging"
+	@echo "  make version     - Show version info"
+	@echo "  make clear-cache - Clear document cache"
+	@echo ""
+	@echo "Quick Start:"
 	@echo "  1. make setup     (creates .env and shows instructions)"
 	@echo "  2. make register  (to get REMARKABLE_TOKEN)"
 	@echo "  3. Add your token to .env"
 	@echo "  4. make install"
 	@echo "  5. docker mcp server enable remarkable"
+	@echo "  6. make diagnose  (verify everything works)"

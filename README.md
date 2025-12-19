@@ -73,21 +73,36 @@ make status
 
 ## Commands
 
+### Setup
 | Command | Description |
 |---------|-------------|
 | `make setup` | Create .env and show setup instructions |
+| `make register` | Register with reMarkable Cloud |
+| `make install` | Build image, set up secrets, create cache |
+| `make secrets` | Update Docker MCP secrets from .env |
+
+### Build
+| Command | Description |
+|---------|-------------|
 | `make build` | Build the Docker image |
 | `make update` | Rebuild with latest remarkable-mcp |
-| `make install` | Build image, set up secrets, create cache |
-| `make register` | Register with reMarkable Cloud |
-| `make secrets` | Update Docker MCP secrets from .env |
-| `make test` | Test the image and connection |
-| `make run` | Run standalone for debugging |
-| `make status` | Check server and secrets status |
-| `make version` | Show version info |
-| `make verify` | Verify full MCP pipeline works |
-| `make clear-cache` | Clear document cache |
 | `make clean` | Remove the Docker image |
+
+### Diagnostics
+| Command | Description |
+|---------|-------------|
+| `make status` | Check server and secrets status |
+| `make tools` | List available MCP tools |
+| `make diagnose` | Full diagnostic report (recommended) |
+| `make verify` | Verify full MCP pipeline works |
+| `make test` | Test the image and connection |
+
+### Other
+| Command | Description |
+|---------|-------------|
+| `make run` | Run standalone for debugging |
+| `make version` | Show version info |
+| `make clear-cache` | Clear document cache |
 
 ## Available MCP Tools
 
