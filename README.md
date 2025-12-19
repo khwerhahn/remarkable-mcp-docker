@@ -6,12 +6,15 @@ Docker packaging for [remarkable-mcp](https://github.com/SamMorrowDrums/remarkab
 
 ## Features
 
+- **Cloud API only** - Connects to reMarkable Cloud (SSH/USB mode not supported in container)
 - **Multi-stage build** - Smaller final image size
 - **Notebook rendering** - Full support for rendering handwritten notebooks to PNG/SVG via `rmc` CLI
 - **Handwriting OCR** - Google Vision API for accurate handwriting recognition, Tesseract as fallback
 - **Persistent cache** - Document metadata cached across sessions for faster startup
 - **Long-lived container** - Keeps running for better performance
 - **Health checks** - Built-in Docker health monitoring
+
+> **Note:** This Docker image only supports **Cloud API mode**. SSH mode (direct USB/network connection to your reMarkable) is not supported because the container cannot access host USB devices or local network services. If you need SSH mode, run [remarkable-mcp](https://github.com/SamMorrowDrums/remarkable-mcp) directly on your host.
 
 ## Prerequisites
 
