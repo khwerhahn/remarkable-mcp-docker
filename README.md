@@ -270,14 +270,20 @@ If you encounter persistent issues with the Docker MCP Toolkit (not the remarkab
 ## File Structure
 
 ```
-remarkable-mcp/
+remarkable-mcp-docker/
 ├── Dockerfile              # Multi-stage container build
 ├── Makefile                # Build/install/update commands
+├── tools.json              # Static tool definitions for AI discovery
+├── docker-mcp-server.yaml  # MCP catalog entry template
 ├── .env                    # Your API keys (git-ignored)
 ├── .env.example            # Template for .env
-├── docker-mcp-server.yaml  # Server definition (reference)
+├── LICENSE                 # MIT License
 └── README.md               # This file
 ```
+
+### Tool Discovery
+
+The `tools.json` file provides static tool definitions that allow AI clients to discover available tools without starting the server. This improves tool discovery speed and helps AI agents understand what each tool does.
 
 ## How It Works
 

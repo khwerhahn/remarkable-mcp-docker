@@ -1,0 +1,134 @@
+{
+  "tools": [
+    {
+      "name": "remarkable_browse",
+      "description": "Browse your reMarkable tablet library. List folders and documents at a given path, or search for documents by name. Use path='/' for root folder. Use query parameter to search across all documents.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Folder path to browse (default: '/' for root). Example: '/Work' or '/Personal/Notes'"
+          },
+          "query": {
+            "type": "string",
+            "description": "Search term to find documents by name (optional, triggers search mode)"
+          }
+        }
+      }
+    },
+    {
+      "name": "remarkable_read",
+      "description": "Read and extract text content from a reMarkable document. Supports PDFs, EPUBs, and notebooks. Use pagination for large documents. Can filter content with grep pattern.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "document": {
+            "type": "string",
+            "description": "Document name or path. Use remarkable_browse to find documents first."
+          },
+          "page": {
+            "type": "integer",
+            "description": "Page number (default: 1). Check 'more' field in response for additional pages."
+          },
+          "content_type": {
+            "type": "string",
+            "enum": ["text", "raw", "annotations"],
+            "description": "Content type: 'text' (full extracted), 'raw' (PDF/EPUB only), 'annotations' (notes only)"
+          },
+          "grep": {
+            "type": "string",
+            "description": "Regex pattern to filter content on current page"
+          },
+          "include_ocr": {
+            "type": "boolean",
+            "description": "Enable OCR for handwritten content (default: false)"
+          }
+        },
+        "required": ["document"]
+      }
+    },
+    {
+      "name": "remarkable_search",
+      "description": "Search across multiple reMarkable documents and return matching content. More powerful than remarkable_browse query - searches inside document content.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Search term for document names"
+          },
+          "grep": {
+            "type": "string",
+            "description": "Pattern to search within document content"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Max documents to return (default: 5, max: 5)"
+          },
+          "include_ocr": {
+            "type": "boolean",
+            "description": "Enable OCR for handwritten content (default: false)"
+          }
+        },
+        "required": ["query"]
+      }
+    },
+    {
+      "name": "remarkable_recent",
+      "description": "Get recently modified documents from your reMarkable tablet. Useful for finding what you were working on recently.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "description": "Maximum documents to return (default: 10, max: 50 without preview, 10 with preview)"
+          },
+          "include_preview": {
+            "type": "boolean",
+            "description": "Include first ~200 chars of text content (default: false)"
+          }
+        }
+      }
+    },
+    {
+      "name": "remarkable_status",
+      "description": "Check connection status and authentication with reMarkable Cloud. Use this to verify your connection or troubleshoot issues.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "remarkable_image",
+      "description": "Render a reMarkable notebook page as an image (PNG or SVG). Essential for viewing handwritten notes, sketches, diagrams, and drawings. Optionally extract text via OCR.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "document": {
+            "type": "string",
+            "description": "Document name or path. Use remarkable_browse to find notebooks."
+          },
+          "page": {
+            "type": "integer",
+            "description": "Page number (default: 1, 1-indexed)"
+          },
+          "output_format": {
+            "type": "string",
+            "enum": ["png", "svg"],
+            "description": "Output format: 'png' (default) or 'svg' for vector graphics"
+          },
+          "background": {
+            "type": "string",
+            "description": "Background color as hex code (default: '#FBFBFB'). Use '#00000000' for transparent."
+          },
+          "include_ocr": {
+            "type": "boolean",
+            "description": "Enable OCR text extraction from the image (default: false). Requires Google Vision API key."
+          }
+        },
+        "required": ["document"]
+      }
+    }
+  ]
+}
