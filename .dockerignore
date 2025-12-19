@@ -1,0 +1,27 @@
+# Don't copy secrets into Docker build context
+.env
+.env.*
+!.env.example
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+README.md
+LICENSE
+*.md
+
+# Development files
+Makefile
+docker-mcp-server.yaml
+
+# macOS
+.DS_Store
+
+# Editor files
+*.swp
+*.swo
+*~
+.idea/
+.vscode/

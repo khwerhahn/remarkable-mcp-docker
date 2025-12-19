@@ -1,0 +1,78 @@
+# Docker MCP Catalog Entry for remarkable-mcp
+# This file documents the server configuration for Docker MCP Toolkit.
+#
+# To add to your local catalog:
+#   Copy the 'remarkable:' section into ~/.docker/mcp/catalogs/docker-mcp.yaml
+#
+# For Docker MCP Registry submission:
+#   See https://github.com/docker/mcp-registry/blob/main/CONTRIBUTING.md
+
+name: remarkable-mcp-catalog
+displayName: reMarkable MCP Server
+registry:
+  remarkable:
+    # Basic metadata
+    title: reMarkable Tablet
+    description: Access reMarkable tablet documents - read notes, extract text, OCR handwriting recognition.
+    type: server
+
+    # Docker image (local build or from registry)
+    image: remarkable-mcp:latest
+
+    # Keep container running for faster subsequent calls
+    longLived: true
+
+    # Server icon (displayed in Docker Desktop UI)
+    icon: https://remarkable.com/favicon.ico
+
+    # Available MCP tools
+    tools:
+      - name: remarkable_browse
+      - name: remarkable_read
+      - name: remarkable_search
+      - name: remarkable_recent
+      - name: remarkable_status
+      - name: remarkable_image
+
+    # Secrets - these appear as input fields in Docker Desktop UI
+    # Users enter values here, Docker encrypts and injects as env vars
+    secrets:
+      - name: remarkable.token
+        env: REMARKABLE_TOKEN
+        example: '{"devicetoken": "eyJ...", "usertoken": ""}'
+        description: >-
+          reMarkable Cloud API token (JSON format).
+          Get code from https://my.remarkable.com/device/desktop/connect
+          then run: docker run --rm -it remarkable-mcp:latest --register CODE
+
+      - name: remarkable.google_vision_key
+        env: GOOGLE_VISION_API_KEY
+        example: AIzaSy...
+        description: >-
+          Google Vision API key for handwriting OCR (optional).
+          Get from https://console.cloud.google.com/apis/credentials
+
+    # Static environment variables
+    env:
+      - name: REMARKABLE_OCR_BACKEND
+        value: auto
+      - name: REMARKABLE_CACHE_DIR
+        value: /app/cache
+
+    # Persistent storage for document metadata cache
+    volumes:
+      - remarkable-cache:/app/cache
+
+    # MCP capabilities
+    prompts: 0
+    resources: {}
+
+    # Categorization for discovery
+    metadata:
+      category: productivity
+      tags:
+        - remarkable
+        - tablet
+        - notes
+        - ocr
+        - handwriting

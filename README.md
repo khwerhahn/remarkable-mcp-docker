@@ -1,0 +1,256 @@
+# remarkable-mcp-docker
+
+Docker packaging for [remarkable-mcp](https://github.com/SamMorrowDrums/remarkable-mcp) by [Sam Morrow](https://github.com/SamMorrowDrums), optimized for [Docker MCP Toolkit](https://docs.docker.com/ai/mcp-catalog-and-toolkit/).
+
+> **Note:** This repository provides Docker containerization only. The core MCP server is developed and maintained by Sam Morrow. Please report MCP server issues to the [upstream project](https://github.com/SamMorrowDrums/remarkable-mcp/issues).
+
+## Features
+
+- **Multi-stage build** - Smaller final image size
+- **Notebook rendering** - Full support for rendering handwritten notebooks to PNG/SVG via `rmc` CLI
+- **Handwriting OCR** - Google Vision API for accurate handwriting recognition, Tesseract as fallback
+- **Persistent cache** - Document metadata cached across sessions for faster startup
+- **Long-lived container** - Keeps running for better performance
+- **Health checks** - Built-in Docker health monitoring
+
+## Prerequisites
+
+- Docker Desktop 4.48+ with MCP Toolkit enabled
+- reMarkable account (for Cloud API access)
+- Google Cloud account (optional, for handwriting OCR)
+
+## Quick Start
+
+```bash
+# Clone the repo
+git clone https://github.com/YOUR_USERNAME/remarkable-mcp-docker.git
+cd remarkable-mcp-docker
+
+# 1. Run setup (creates .env and shows instructions)
+make setup
+
+# 2. Register with reMarkable to get your token
+make register
+# Enter the code from https://my.remarkable.com/device/desktop/connect
+
+# 3. Copy the returned JSON token to .env as REMARKABLE_TOKEN
+
+# 4. Install (builds image + sets secrets + creates cache volume)
+make install
+
+# 5. Enable the server
+docker mcp server enable remarkable
+
+# 6. Check status
+make status
+```
+
+## Getting Your Tokens
+
+### reMarkable Token (Required)
+
+1. Go to https://my.remarkable.com/device/desktop/connect
+2. Copy the one-time code (8 characters)
+3. Run `make register` and paste the code
+4. Copy the returned JSON token to `.env`:
+   ```
+   REMARKABLE_TOKEN={"devicetoken": "eyJ...", "usertoken": ""}
+   ```
+
+### Google Vision API Key (Optional, for OCR)
+
+1. Go to https://console.cloud.google.com/
+2. Create or select a project
+3. Enable **Cloud Vision API** in APIs & Services → Library
+4. Create an API key in APIs & Services → Credentials
+5. Add to `.env`:
+   ```
+   GOOGLE_VISION_API_KEY=AIzaSy...
+   ```
+
+## Commands
+
+| Command | Description |
+|---------|-------------|
+| `make setup` | Create .env and show setup instructions |
+| `make build` | Build the Docker image |
+| `make update` | Rebuild with latest remarkable-mcp |
+| `make install` | Build image, set up secrets, create cache |
+| `make register` | Register with reMarkable Cloud |
+| `make secrets` | Update Docker MCP secrets from .env |
+| `make test` | Test the image and connection |
+| `make run` | Run standalone for debugging |
+| `make status` | Check server and secrets status |
+| `make version` | Show version info |
+| `make verify` | Verify full MCP pipeline works |
+| `make clear-cache` | Clear document cache |
+| `make clean` | Remove the Docker image |
+
+## Available MCP Tools
+
+| Tool | Description |
+|------|-------------|
+| `remarkable_browse` | Browse folders and documents |
+| `remarkable_read` | Read document content with pagination |
+| `remarkable_search` | Search for documents by name |
+| `remarkable_recent` | Get recently modified documents |
+| `remarkable_status` | Check connection status |
+| `remarkable_image` | Export page as PNG/SVG image with OCR |
+
+### Usage Examples
+
+**Browse your library:**
+```
+remarkable_browse("/")                    # List root folder
+remarkable_browse("/Projects")            # List specific folder
+remarkable_browse(query="meeting")        # Search by name
+```
+
+**Read document content:**
+```
+remarkable_read("Document Name")          # Read first page
+remarkable_read("Document", page=2)       # Read specific page
+remarkable_read("Notes", grep="keyword")  # Search within document
+```
+
+**Render handwritten notebooks:**
+```
+remarkable_image("Notebook Name")                    # Get PNG image
+remarkable_image("Notes", include_ocr=True)          # With OCR text extraction
+remarkable_image("Sketch", output_format="svg")      # Get SVG vector format
+```
+
+**Get recent documents:**
+```
+remarkable_recent()                       # Last 10 modified
+remarkable_recent(limit=5, include_preview=True)  # With content preview
+```
+
+## VS Code / Cursor Setup
+
+Add to `.vscode/mcp.json`:
+
+```json
+{
+  "servers": {
+    "remarkable": {
+      "command": "uvx",
+      "args": ["remarkable-mcp"],
+      "env": {
+        "REMARKABLE_TOKEN": "{\"devicetoken\": \"eyJ...\", \"usertoken\": \"\"}"
+      }
+    }
+  }
+}
+```
+
+## Claude Desktop Setup
+
+The server is available through Docker MCP gateway after installation.
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────┐
+│ Docker MCP Gateway                          │
+│   └── remarkable-mcp container              │
+│       ├── Python 3.11 runtime               │
+│       ├── remarkable-mcp from PyPI          │
+│       ├── rmc CLI (notebook → SVG/PNG)      │
+│       ├── cairosvg (SVG → PNG conversion)   │
+│       ├── Tesseract OCR (fallback)          │
+│       └── /app/cache (persistent volume)    │
+└─────────────────────────────────────────────┘
+```
+
+### Rendering Pipeline
+
+```
+.rm file → rmc → SVG → cairosvg → PNG → Google Vision OCR → Text
+```
+
+## Updating
+
+When a new version of remarkable-mcp is released:
+
+```bash
+cd remarkable-mcp-docker
+
+# Rebuild with latest from PyPI (no cache)
+make update
+
+# Verify everything still works
+make verify
+```
+
+The `make update` command rebuilds the image with `--no-cache` to pull the latest remarkable-mcp from PyPI.
+
+## Performance Tips
+
+- **First load is slow** - The server downloads document metadata from reMarkable Cloud on first start
+- **Use cache volume** - The `remarkable-cache` Docker volume persists document metadata across restarts
+- **Long-lived mode** - Container stays running to avoid repeated startup overhead
+- **Clear cache if needed** - Run `make clear-cache` if documents seem out of sync
+
+## Troubleshooting
+
+**Token expired or invalid?**
+```bash
+make register
+```
+Then update `.env` and run `make secrets`.
+
+**First load very slow?**
+Normal on first run. Document metadata is being downloaded. Subsequent starts use the cache.
+
+**Clear stale cache:**
+```bash
+make clear-cache
+```
+
+**Check server status:**
+```bash
+make status
+docker mcp server ls
+```
+
+**View server details:**
+```bash
+docker mcp server inspect remarkable
+```
+
+## File Structure
+
+```
+remarkable-mcp/
+├── Dockerfile              # Multi-stage container build
+├── Makefile                # Build/install/update commands
+├── .env                    # Your API keys (git-ignored)
+├── .env.example            # Template for .env
+├── docker-mcp-server.yaml  # Server definition (reference)
+└── README.md               # This file
+```
+
+## How It Works
+
+The remarkable-mcp server is configured in Docker's MCP catalog at:
+```
+~/.docker/mcp/catalogs/docker-mcp.yaml
+```
+
+Key features:
+- `longLived: true` - Container persists for faster subsequent calls
+- `volumes: remarkable-cache:/app/cache` - Document metadata cached
+- Secrets stored in Docker Desktop's secret store
+
+## Credits
+
+- **[remarkable-mcp](https://github.com/SamMorrowDrums/remarkable-mcp)** by Sam Morrow - The core MCP server this Docker image packages
+- **[rmc](https://github.com/ricklupton/rmc)** - CLI tool for converting reMarkable .rm files
+- **[Docker MCP Toolkit](https://docs.docker.com/ai/mcp-catalog-and-toolkit/)** - Container orchestration for MCP servers
+
+## License
+
+MIT License - see [LICENSE](LICENSE) file.
+
+This project packages [remarkable-mcp](https://github.com/SamMorrowDrums/remarkable-mcp) which is also MIT licensed.
