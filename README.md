@@ -25,27 +25,16 @@ Docker packaging for [remarkable-mcp](https://github.com/SamMorrowDrums/remarkab
 ## Quick Start
 
 ```bash
-# Clone the repo
 git clone https://github.com/khwerhahn/remarkable-mcp-docker.git
 cd remarkable-mcp-docker
 
-# 1. Run setup (creates .env and shows instructions)
-make setup
-
-# 2. Register with reMarkable to get your token
-make register
-# Enter the code from https://my.remarkable.com/device/desktop/connect
-
-# 3. Copy the returned JSON token to .env as REMARKABLE_TOKEN
-
-# 4. Install (builds image + sets secrets + creates cache volume)
-make install
-
-# 5. Enable the server
+make setup              # Creates .env, shows instructions
+make register           # Get token from reMarkable Cloud
+# Copy token to .env
+make install            # Build and install
 docker mcp server enable remarkable
-
-# 6. Check status
-make status
+# Restart your AI client
+make verify             # Check everything works
 ```
 
 ## Getting Your Tokens
@@ -73,36 +62,14 @@ make status
 
 ## Commands
 
-### Setup
 | Command | Description |
 |---------|-------------|
 | `make setup` | Create .env and show setup instructions |
-| `make register` | Register with reMarkable Cloud |
-| `make install` | Build image, set up secrets, create cache |
-| `make secrets` | Update Docker MCP secrets from .env |
-
-### Build
-| Command | Description |
-|---------|-------------|
-| `make build` | Build the Docker image |
-| `make update` | Rebuild with latest remarkable-mcp |
-| `make clean` | Remove the Docker image |
-
-### Diagnostics
-| Command | Description |
-|---------|-------------|
-| `make status` | Check server and secrets status |
-| `make tools` | List available MCP tools |
-| `make diagnose` | Full diagnostic report (recommended) |
-| `make verify` | Verify full MCP pipeline works |
-| `make test` | Test the image and connection |
-
-### Other
-| Command | Description |
-|---------|-------------|
-| `make run` | Run standalone for debugging |
-| `make version` | Show version info |
-| `make clear-cache` | Clear document cache |
+| `make register` | Get reMarkable Cloud token |
+| `make install` | Build and install to Docker MCP |
+| `make update` | Rebuild with latest version |
+| `make verify` | Check everything works |
+| `make clean` | Remove image and cache |
 
 ## Available MCP Tools
 
