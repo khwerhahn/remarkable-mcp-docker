@@ -292,31 +292,7 @@ The remarkable-mcp server is configured in a custom Docker MCP catalog at:
 ~/.docker/mcp/catalogs/custom.yaml
 ```
 
-The `make install` command automatically creates this catalog and adds the remarkable server entry.
-
-**Important:** The Docker MCP gateway only loads the official `docker-mcp.yaml` catalog by default. To include custom catalogs, you must configure your AI client to pass `--additional-catalog custom.yaml` to the gateway.
-
-### Claude Code Configuration
-
-Add to `~/.claude/settings.json`:
-
-```json
-{
-  "mcpServers": {
-    "docker-mcp": {
-      "command": "docker",
-      "args": [
-        "mcp",
-        "gateway",
-        "run",
-        "--long-lived",
-        "--additional-catalog",
-        "custom.yaml"
-      ]
-    }
-  }
-}
-```
+The `make install` command automatically creates this catalog and adds the remarkable server entry. The Docker MCP gateway (v0.19.0+) automatically loads all registered catalogs - no additional configuration needed.
 
 Key features:
 - `longLived: true` - Container persists for faster subsequent calls
