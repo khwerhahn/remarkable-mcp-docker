@@ -11,7 +11,7 @@ IMAGE_TAG := latest
 FULL_IMAGE := $(IMAGE_NAME):$(IMAGE_TAG)
 CACHE_VOLUME := remarkable-cache
 
-.PHONY: all build update install test clean help env-check register secrets status version verify setup tools diagnose
+.PHONY: all build update install catalog test clean help env-check register secrets status version verify setup tools diagnose
 
 all: build
 
@@ -62,13 +62,24 @@ update:
 	@$(MAKE) --no-print-directory version
 
 # Build and install to Docker MCP catalog
-install: build secrets
+install: build catalog secrets
 	@echo "Creating cache volume..."
 	@docker volume create $(CACHE_VOLUME) > /dev/null 2>&1 || true
+	@echo ""
 	@echo "✓ remarkable-mcp installed"
 	@echo ""
 	@echo "Enable the server with:"
 	@echo "  docker mcp server enable remarkable"
+
+# Add remarkable to Docker MCP custom catalog
+catalog:
+	@echo "Setting up Docker MCP catalog..."
+	@if ! docker mcp catalog ls 2>/dev/null | grep -q "^custom:"; then \
+		docker mcp catalog create custom > /dev/null 2>&1; \
+		echo "  ✓ Created custom catalog"; \
+	fi
+	@cp docker-mcp-server.yaml ~/.docker/mcp/catalogs/custom.yaml
+	@echo "  ✓ Installed remarkable to custom catalog"
 
 # Set up Docker MCP secrets from .env file
 secrets: env-check

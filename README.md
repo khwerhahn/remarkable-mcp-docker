@@ -287,10 +287,12 @@ The `tools.json` file provides static tool definitions that allow AI clients to 
 
 ## How It Works
 
-The remarkable-mcp server is configured in Docker's MCP catalog at:
+The remarkable-mcp server is configured in a custom Docker MCP catalog at:
 ```
-~/.docker/mcp/catalogs/docker-mcp.yaml
+~/.docker/mcp/catalogs/custom.yaml
 ```
+
+The `make install` command automatically creates this catalog and adds the remarkable server entry.
 
 Key features:
 - `longLived: true` - Container persists for faster subsequent calls
