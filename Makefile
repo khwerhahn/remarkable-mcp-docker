@@ -68,8 +68,30 @@ install: build catalog secrets
 	@echo ""
 	@echo "✓ remarkable-mcp installed"
 	@echo ""
-	@echo "Enable the server with:"
-	@echo "  docker mcp server enable remarkable"
+	@echo "═══════════════════════════════════════════════════════════════"
+	@echo "  NEXT STEPS"
+	@echo "═══════════════════════════════════════════════════════════════"
+	@echo ""
+	@echo "1. Enable the server:"
+	@echo "   docker mcp server enable remarkable"
+	@echo ""
+	@echo "2. Configure your AI client to load custom catalogs."
+	@echo "   The gateway only loads docker-mcp.yaml by default."
+	@echo ""
+	@echo "   For Claude Code, add to ~/.claude/settings.json:"
+	@echo ""
+	@echo '   "mcpServers": {'
+	@echo '     "docker-mcp": {'
+	@echo '       "command": "docker",'
+	@echo '       "args": ["mcp", "gateway", "run", "--long-lived",'
+	@echo '                "--additional-catalog", "custom.yaml"]'
+	@echo '     }'
+	@echo '   }'
+	@echo ""
+	@echo "3. Restart your AI client"
+	@echo ""
+	@echo "4. Verify with: make diagnose"
+	@echo "═══════════════════════════════════════════════════════════════"
 
 # Add remarkable to Docker MCP custom catalog
 catalog:
@@ -282,6 +304,8 @@ help:
 	@echo "  1. make setup     (creates .env and shows instructions)"
 	@echo "  2. make register  (to get REMARKABLE_TOKEN)"
 	@echo "  3. Add your token to .env"
-	@echo "  4. make install"
+	@echo "  4. make install   (shows client configuration steps)"
 	@echo "  5. docker mcp server enable remarkable"
-	@echo "  6. make diagnose  (verify everything works)"
+	@echo "  6. Configure AI client with --additional-catalog custom.yaml"
+	@echo "  7. Restart AI client"
+	@echo "  8. make diagnose  (verify everything works)"
